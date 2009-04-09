@@ -19,7 +19,7 @@ class MemCacheStoreWithDeleteMatched < ActiveSupport::Cache::MemCacheStore
     key_list = get_key_list
     key_list.each do |name|
       if name.match(matcher)
-        return false unless delete(name, options)
+        unless delete(name, options)
         keys_to_remove << name
       end
     end
