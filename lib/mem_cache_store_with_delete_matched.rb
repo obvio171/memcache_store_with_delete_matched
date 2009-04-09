@@ -8,7 +8,7 @@ class MemCacheStoreWithDeleteMatched < ActiveSupport::Cache::MemCacheStore
     key_list = get_key_list
     unless key_list.include?(name)
       key_list << name 
-      return false unless _write(Common::KEY, key_list.to_yaml, options)
+      _write(Common::KEY, key_list.to_yaml, options)
     end
     
     _write(name, value, options)
@@ -19,7 +19,7 @@ class MemCacheStoreWithDeleteMatched < ActiveSupport::Cache::MemCacheStore
     key_list = get_key_list
     key_list.each do |name|
       if name.match(matcher)
-        unless delete(name, options)
+        delete(name, options)
         keys_to_remove << name
       end
     end
