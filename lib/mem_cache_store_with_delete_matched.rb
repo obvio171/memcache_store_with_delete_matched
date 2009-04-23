@@ -5,13 +5,15 @@ class MemCacheStoreWithDeleteMatched < ActiveSupport::Cache::MemCacheStore
   end
   
   def write(name, value, options = nil)
+    without_key_list = options.delete(:without_key_list) if options
+    unless without_key_list
     key_list = get_key_list
     unless key_list.include?(name)
       key_list << name 
-      _write(Common::KEY, key_list.to_yaml, options)
+        super(Common::KEY, key_list.to_yaml, options)
     end
-    
-    _write(name, value, options)
+    end
+    super(name, value, options)
   end
 
   def delete_matched(matcher, options = nil)
@@ -26,7 +28,9 @@ class MemCacheStoreWithDeleteMatched < ActiveSupport::Cache::MemCacheStore
     
     key_list -= keys_to_remove
     
-    _write(Common::KEY, key_list.to_yaml, options)
+    options = {} unless options
+    options.merge(:without_key_list => true) #call original write method
+    write(Common::KEY, key_list.to_yaml, options)
   end
   
   private 
@@ -39,13 +43,4 @@ class MemCacheStoreWithDeleteMatched < ActiveSupport::Cache::MemCacheStore
     end
   end
   
-  def _write(key, value, options = nil)
-    method = options && options[:unless_exist] ? :add : :set
-    response = @data.send(method, key, value, expires_in(options), raw?(options))
-    return true if response.nil?
-    response == Response::STORED
-  rescue MemCache::MemCacheError => e
-    logger.error("MemCacheError (#{e}): #{e.message}")
-    false
-  end
 end
